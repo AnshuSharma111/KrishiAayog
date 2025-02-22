@@ -1,0 +1,32 @@
+R_DEF: Internal format may change without notice
+local
+color black
+color purple_200
+color purple_500
+color purple_700
+color teal_200
+color teal_700
+color white
+drawable camerabutton
+drawable corn
+drawable cow
+drawable home
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+drawable scan
+font lufgabold
+font lufgaextrabold
+font lufgaextralight
+font lufgalight
+font lufgamedium
+font lufgaregular
+font lufgasemibold
+font lufgathin
+mipmap ic_launcher
+mipmap ic_launcher_round
+raw plant
+raw searching
+string app_name
+style Theme.KrishiAayog
+xml backup_rules
+xml data_extraction_rules
