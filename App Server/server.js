@@ -17,6 +17,11 @@ app.use(express.json()); // Middleware for JSON body parsing
 // Load Routes
 app.use("/api/auth", require("./routes/auth"));
 
+// Test route
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to the App Server" });
+});
+
 // Non-Existent Route
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });

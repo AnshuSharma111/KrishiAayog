@@ -105,82 +105,101 @@ def allowed_file(filename):
 @app.route("/api/crop/predict", methods=["POST"])
 @jwt_required
 def predict_crop_disease():
+    print("Received request to predict crop disease...")
     if "file" not in request.files:
+        print("No file uploaded...Exiting")
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["file"]
     if not allowed_file(file.filename):
+        print("Invalid file type...Exiting")
         return jsonify({"error": "Invalid file type. Only PNG, JPG, and JPEG allowed"}), 400
 
     user_id = request.user["id"]
 
+    print("File uploaded...Processing")
     unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
     file.save(file_path)
     
     img = preprocess_image(file_path)
 
+    print("Predicting crop disease...")
     with torch.no_grad():
         output = crop_model(img)
         _, predicted_class = torch.max(output, dim=1)
 
+    print("Prediction complete")
     prediction = CLASS_LABELS[int(predicted_class.item())]
 
     # Get AI-generated advice
+    print("Querying Gemini for advice...")
     description, cause, cure = gemini_query("plant", prediction)
     advice = {"description": description, "cause": cause, "cure": cure}
 
     # Convert image to base64
+    print("Encoding image to base64...")
     image_b64 = encode_image_to_base64(file_path)
 
     # Save to MongoDB with error handling
+    print("Trying to save data to MongoDB...")
     try:
         save_request_to_db(cdata, user_id, image_b64, prediction, "crop", advice)
     except Exception as e:
         return jsonify({"error": "Failed to save data", "details": str(e)}), 500
-
+    print("Data saved to MongoDB...Exiting")
     return jsonify({"prediction": prediction, "advice": advice})
 
 
 @app.route("/api/livestock/predict", methods=["POST"])
 @jwt_required
 def predict_skin_disease():
+    print("Received request to predict livestock skin disease...")
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["file"]
     if not allowed_file(file.filename):
+        print("Invalid file type...Exiting")
         return jsonify({"error": "Invalid file type. Only PNG, JPG, and JPEG allowed"}), 400
 
     user_id = request.user["id"]
 
+    print("File uploaded...Processing")
     unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
     file.save(file_path)
 
     # Get prediction
+    print("Predicting livestock skin disease...")
     prediction = livestock_predict(file_path)
 
     # Get AI-generated advice
+    print("Querying Gemini for advice...")
     disease = "lumpy skin disease" if prediction == "Infected" else "normal"
     description, cause, cure = gemini_query("livestock", disease)
     advice = {"description": description, "cause": cause, "cure": cure}
 
     # Convert image to base64
+    print("Encoding image to base64...")
     image_b64 = encode_image_to_base64(file_path)
 
     # Save to MongoDB with error handling
+    print("Trying to save data to MongoDB...")
     try:
         save_request_to_db(ldata, user_id, image_b64, prediction, "livestock", advice)
     except Exception as e:
         return jsonify({"error": "Failed to save data", "details": str(e)}), 500
 
+    print("Data saved to MongoDB...Exiting")
     return jsonify({"prediction": prediction, "advice": advice})
 
 #---------------------------------------------------FETCH_HISTORY_ROUTES----------------------------------------------------------
 @app.route("/api/livestock/history", methods=["GET"])
 @jwt_required
 def get_livestock_history():
+    print("Received request to fetch livestock history...")
+    print("Fetching data from MongoDB...")
     user_id = request.user["id"]
     history = list(ldata.find({"user_id": user_id}, {"_id": 0}))
     return jsonify({"history": history})
@@ -188,6 +207,8 @@ def get_livestock_history():
 @app.route("/api/crop/history", methods=["GET"])
 @jwt_required
 def get_crop_history():
+    print("Received request to fetch crop history...")
+    print("Fetching data from MongoDB...")
     user_id = request.user["id"]
     history = list(cdata.find({"user_id": user_id}, {"_id": 0}))
     return jsonify({"history": history})
