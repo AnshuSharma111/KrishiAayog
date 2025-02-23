@@ -144,6 +144,7 @@ dist
 .externalNativeBuild
 .cxx
 local.properties
+apikeys.properties
 # IntelliJ/Android Studio project files
 .idea/
 # Log files
