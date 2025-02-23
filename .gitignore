@@ -150,7 +150,3 @@ local.properties
 *.log
 # Keystore files (security)
 *.keystore
-
-#
-.env
-test.py
