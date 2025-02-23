@@ -1,34 +1,38 @@
 package com.bytebandits.krishiaayog.viewmodel
 
-import com.bytebandits.krishiaayog.DataClass.PredictedData
+import android.annotation.SuppressLint
+import com.bytebandits.krishiaayog.DataClass.CropHealthPredictedData
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.bytebandits.krishiaayog.DataClass.LivestockHealthPredictedData
 import com.bytebandits.krishiaayog.retrofitInterface.RetrofitInterface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
 import java.io.IOException
 
 class CameraViewModel(application: Application) : AndroidViewModel(application) {
 
-    val DiseaseData = mutableStateOf<PredictedData?>(null)
+    @SuppressLint("StaticFieldLeak")
+    private val context = getApplication<Application>().applicationContext
+
+    val DiseaseData = mutableStateOf<CropHealthPredictedData?>(null)
 
     val CapturedImage = mutableStateOf<Bitmap?>(null)
 
 
-    fun getData(image: ByteArray) {
+    fun getData(resultRoute:String, image: ByteArray) {
         viewModelScope.launch{
             try {
 
@@ -39,16 +43,31 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
                 val requestbody = image.toRequestBody("image/jpeg".toMediaType(), 0, image.size)
                 val multipartBody =
                     MultipartBody.Part.createFormData("file", "image.jpg", requestbody)
-                val dataResponse: Response<PredictedData> =
-                    RetrofitInterface.instance.uploadImage(multipartBody)
 
-                withContext(Dispatchers.Main) {
+                val apiService = RetrofitInterface.create(context)
 
-                    if (dataResponse.isSuccessful) {
-                        DiseaseData.value = dataResponse.body()
-                        println(DiseaseData.value)
-                    }
+                val dataResponse = if (resultRoute == "crop_health_result") {
+                    apiService.uploadCropImage(multipartBody)
+                } else {
+                    apiService.uploadLivestockImage(multipartBody) // Corrected this line
                 }
+//                val dataResponse: Response<CropHealthPredictedData> = when (resultRoute) {
+//                    "crop_health_result" -> RetrofitInterface.create(context).uploadCropImage(multipartBody)
+//                    "livestock_health_result" -> fetchLivestockHealth()
+//                    else ->
+//                }
+
+
+//                withContext(Dispatchers.Main) {
+//                    println("Request Chole geche")
+//
+//                    if (dataResponse.isSuccessful) {
+//                        DiseaseData.value = dataResponse.body()
+//                        println(DiseaseData.value)
+//                    }else{
+//                        println("response nhi aya !")
+//                    }
+//                }
             } catch (e: Exception) {
                 println(e)
                 DiseaseData.value = null
@@ -58,7 +77,6 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
     }
-
 }
 
 class CameraViewModelFactory(private val application: Application) : ViewModelProvider.Factory {

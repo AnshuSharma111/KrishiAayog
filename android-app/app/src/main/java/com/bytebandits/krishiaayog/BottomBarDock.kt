@@ -65,6 +65,8 @@ fun BottomBarDock(navController: NavController, modifier: Modifier = Modifier) {
 fun BottomBarButton(icon: Int, navController: NavController, route: String, selectedTab: MutableState<String>, size: Dp) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val isSelected = selectedTab.value == route
+//    val isSelected = currentRoute?.startsWith("crophealth") == true
+
 
     Box(
         modifier = Modifier
@@ -87,5 +89,4 @@ fun BottomBarButton(icon: Int, navController: NavController, route: String, sele
         Image(painter = painterResource(icon), contentDescription = null, colorFilter = ColorFilter.tint(Color.Black), modifier = Modifier.size(size))
     }
 
-    
 }
