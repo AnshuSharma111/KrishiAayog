@@ -1,17 +1,22 @@
+# Flask related imports
 from flask import Flask, request, jsonify
-import os
-import torch
-from livestock_model import predict as livestock_predict
-from cropdisease_model import load_model, preprocess_image, CLASS_LABELS
-import google.generativeai as genai
-import io
-from pymongo import MongoClient
-from dotenv import load_dotenv
 from flask_cors import CORS
-import gridfs
+# Gemini related imports
+import google.generativeai as genai
+# MongoDB related imports
+from pymongo import MongoClient
+import io
 import datetime
 import base64
+# ML related imports
+import torch
 from PIL import Image
+from livestock_model import predict as livestock_predict
+from cropdisease_model import load_model, preprocess_image, CLASS_LABELS
+# Other imports
+import os
+from dotenv import load_dotenv
+from auth import verify_token
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -21,13 +26,9 @@ load_dotenv()
 
 # Set up MongoDB connection
 client = MongoClient(os.getenv("MONGO_URI"))
-crop_db = client[os.getenv("CROP_DB")]
-lstock_db = client[os.getenv("LIVESTOCK_DB")]
-cdata = crop_db[os.getenv("TXT_COLLECTION")]
-ldata = lstock_db[os.getenv("TXT_COLLECTION")]
-
-cfs = gridfs.GridFS(crop_db)
-lfs = gridfs.GridFS(lstock_db)
+db = client[os.getenv("DB")]
+cdata = db["CROP_COL"]
+ldata = db["LSTOCK_COL"]
 
 # ---------------------------------------------------GEMINI---------------------------------------------------
 # Set up Gemini model
@@ -89,14 +90,25 @@ def save_request_to_db(db_collection, user_id, image_b64, prediction, model_type
         "image": image_b64,
         "prediction": prediction,
         "model_type": model_type,
-        "advice": advice,  # 🔹 Now stores Gemini-generated advice
-        "timestamp": datetime.datetime.utcnow()
+        "advice": advice,
+        "timestamp": datetime.datetime()
     }
     db_collection.insert_one(request_data)
 
 #---------------------------------------------------PREDICTION_ROUTES----------------------------------------------------------
 @app.route("/api/crop/predict", methods=["POST"])
 def predict_crop_disease():
+    # Get token from request headers
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return jsonify({"error": "Missing authentication token"}), 401
+    
+    # Extract token (Authorization: Bearer <token>)
+    token = auth_header.split(" ")[1] if " " in auth_header else auth_header
+    user_data = verify_token(token)
+
+    if "error" in user_data:
+        return jsonify(user_data), 401  # Return error if token is invalid
     if "file" not in request.files or "user_id" not in request.form:
         return jsonify({"error": "File and user_id are required"}), 400
 
@@ -155,6 +167,17 @@ def predict_skin_disease():
 #---------------------------------------------------FETCH_HISTORY_ROUTES----------------------------------------------------------
 @app.route("/api/livestock/history", methods=["GET"])
 def get_livestock_history():
+    # Get token from request headers
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return jsonify({"error": "Missing authentication token"}), 401
+    
+    # Extract token (Authorization: Bearer <token>)
+    token = auth_header.split(" ")[1] if " " in auth_header else auth_header
+    user_data = verify_token(token)
+
+    if "error" in user_data:
+        return jsonify(user_data), 401  # Return error if token is invalid
     user_id = request.args.get("user_id")
     if not user_id:
         return jsonify({"error": "user_id is required"}), 400

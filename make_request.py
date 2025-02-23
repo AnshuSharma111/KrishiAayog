@@ -12,9 +12,9 @@ def predict(api_url, image_path):
         response = requests.post(api_url, files=files, data=data)
 
     if response.status_code == 200:
-        print(f"✅ Prediction: {response.json()['prediction']}")
+        print(f"Prediction: {response.json()['prediction']}")
     else:
-        print(f"❌ Error: {response.json()}")
+        print(f"Error: {response.json()}")
 
 if __name__ == "__main__":
     print("Select API:")
