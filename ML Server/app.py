@@ -15,8 +15,9 @@ from livestock_model import predict as livestock_predict
 from cropdisease_model import load_model, preprocess_image, CLASS_LABELS
 # Other imports
 import os
+import uuid
 from dotenv import load_dotenv
-from auth import verify_token
+from auth import jwt_required
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -27,8 +28,8 @@ load_dotenv()
 # Set up MongoDB connection
 client = MongoClient(os.getenv("MONGO_URI"))
 db = client[os.getenv("DB")]
-cdata = db["CROP_COL"]
-ldata = db["LSTOCK_COL"]
+cdata = db[os.getenv("CROP_COL")]
+ldata = db[os.getenv("LSTOCK_COL")]
 
 # ---------------------------------------------------GEMINI---------------------------------------------------
 # Set up Gemini model
@@ -69,7 +70,7 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Load crop disease model
-crop_model = load_model("Models/plant-disease-model.pth")
+crop_model = load_model("ML Server/Models/plant-disease-model.pth")
 crop_model.eval()
 
 # Enable CORS
@@ -91,32 +92,32 @@ def save_request_to_db(db_collection, user_id, image_b64, prediction, model_type
         "prediction": prediction,
         "model_type": model_type,
         "advice": advice,
-        "timestamp": datetime.datetime()
+        "timestamp": datetime.datetime.now()
     }
     db_collection.insert_one(request_data)
 
+#---------------------------------------------------HELPER_FUNCTIONS---------------------------------------------------
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
 #---------------------------------------------------PREDICTION_ROUTES----------------------------------------------------------
 @app.route("/api/crop/predict", methods=["POST"])
+@jwt_required
 def predict_crop_disease():
-    # Get token from request headers
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        return jsonify({"error": "Missing authentication token"}), 401
-
-    # Extract token (Authorization: Bearer <token>)
-    token = auth_header.split(" ")[1] if " " in auth_header else auth_header
-    user_data = verify_token(token)
-
-    if "error" in user_data:
-        return jsonify(user_data), 401  # Return error if token is invalid
-    if "file" not in request.files or "user_id" not in request.form:
-        return jsonify({"error": "File and user_id are required"}), 400
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["file"]
-    user_id = request.form["user_id"]
+    if not allowed_file(file.filename):
+        return jsonify({"error": "Invalid file type. Only PNG, JPG, and JPEG allowed"}), 400
 
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    user_id = request.user["id"]
+
+    unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
+    file_path = os.path.join(UPLOAD_DIR, unique_filename)
     file.save(file_path)
+    
     img = preprocess_image(file_path)
 
     with torch.no_grad():
@@ -125,33 +126,42 @@ def predict_crop_disease():
 
     prediction = CLASS_LABELS[int(predicted_class.item())]
 
-    # Get advice (description, cause, cure) using Gemini
+    # Get AI-generated advice
     description, cause, cure = gemini_query("plant", prediction)
     advice = {"description": description, "cause": cause, "cure": cure}
 
     # Convert image to base64
     image_b64 = encode_image_to_base64(file_path)
 
-    # Save to MongoDB
-    save_request_to_db(cdata, user_id, image_b64, prediction, "crop", advice)
+    # Save to MongoDB with error handling
+    try:
+        save_request_to_db(cdata, user_id, image_b64, prediction, "crop", advice)
+    except Exception as e:
+        return jsonify({"error": "Failed to save data", "details": str(e)}), 500
 
     return jsonify({"prediction": prediction, "advice": advice})
 
+
 @app.route("/api/livestock/predict", methods=["POST"])
+@jwt_required
 def predict_skin_disease():
-    if "file" not in request.files or "user_id" not in request.form:
-        return jsonify({"error": "File and user_id are required"}), 400
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["file"]
-    user_id = request.form["user_id"]
+    if not allowed_file(file.filename):
+        return jsonify({"error": "Invalid file type. Only PNG, JPG, and JPEG allowed"}), 400
 
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    user_id = request.user["id"]
+
+    unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
+    file_path = os.path.join(UPLOAD_DIR, unique_filename)
     file.save(file_path)
 
     # Get prediction
     prediction = livestock_predict(file_path)
 
-    # Get advice (description, cause, cure) using Gemini
+    # Get AI-generated advice
     disease = "lumpy skin disease" if prediction == "Infected" else "normal"
     description, cause, cure = gemini_query("livestock", disease)
     advice = {"description": description, "cause": cause, "cure": cure}
@@ -159,41 +169,28 @@ def predict_skin_disease():
     # Convert image to base64
     image_b64 = encode_image_to_base64(file_path)
 
-    # Save to MongoDB
-    save_request_to_db(ldata, user_id, image_b64, prediction, "livestock", advice)
+    # Save to MongoDB with error handling
+    try:
+        save_request_to_db(ldata, user_id, image_b64, prediction, "livestock", advice)
+    except Exception as e:
+        return jsonify({"error": "Failed to save data", "details": str(e)}), 500
 
     return jsonify({"prediction": prediction, "advice": advice})
 
 #---------------------------------------------------FETCH_HISTORY_ROUTES----------------------------------------------------------
 @app.route("/api/livestock/history", methods=["GET"])
+@jwt_required
 def get_livestock_history():
-    # Get token from request headers
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        return jsonify({"error": "Missing authentication token"}), 401
-    
-    # Extract token (Authorization: Bearer <token>)
-    token = auth_header.split(" ")[1] if " " in auth_header else auth_header
-    user_data = verify_token(token)
-
-    if "error" in user_data:
-        return jsonify(user_data), 401  # Return error if token is invalid
-    user_id = request.args.get("user_id")
-    if not user_id:
-        return jsonify({"error": "user_id is required"}), 400
-
+    user_id = request.user["id"]
     history = list(ldata.find({"user_id": user_id}, {"_id": 0}))
     return jsonify({"history": history})
 
 @app.route("/api/crop/history", methods=["GET"])
+@jwt_required
 def get_crop_history():
-    user_id = request.args.get("user_id")
-    if not user_id:
-        return jsonify({"error": "user_id is required"}), 400
-
+    user_id = request.user["id"]
     history = list(cdata.find({"user_id": user_id}, {"_id": 0}))
     return jsonify({"history": history})
-
 #---------------------------------------------------START SERVER----------------------------------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)

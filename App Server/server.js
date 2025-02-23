@@ -17,7 +17,7 @@ app.use(express.json()); // Middleware for JSON body parsing
 // Load Routes
 app.use("/api/auth", require("./routes/auth"));
 
-// Catch-All 404 Route
+// Non-Existent Route
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });

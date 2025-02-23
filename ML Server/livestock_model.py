@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 # Load EfficientNetB0 model
-def load_model(model_path="Models\lumpy_skin_model.pth"):
+def load_model(model_path="ML Server\Models\lumpy-skin-model.pth"):
     model = models.efficientnet_b0(weights=EfficientNet_B0_Weights.DEFAULT)
     num_features = model.classifier[1].in_features
     model.classifier[1] = torch.nn.Linear(num_features, 1)
@@ -17,7 +17,7 @@ def load_model(model_path="Models\lumpy_skin_model.pth"):
     model.eval()  # Set to evaluation mode
     return model
 
-MODEL_PATH = os.path.join("Models", "lumpy_skin_model.pth")  # Cross-platform
+MODEL_PATH = os.path.join("ML Server", "Models", "lumpy-skin-model.pth")
 model = load_model(MODEL_PATH)
 
 # Define image preprocessing
