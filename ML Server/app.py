@@ -101,6 +101,11 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+#---------------------------------------------------TEST_ROUTE-----------------------------------------------------------------
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"message": "Welcome to the AI Farming API"})
+
 #---------------------------------------------------PREDICTION_ROUTES----------------------------------------------------------
 @app.route("/api/crop/predict", methods=["POST"])
 @jwt_required
@@ -146,11 +151,12 @@ def predict_crop_disease():
     try:
         save_request_to_db(cdata, user_id, image_b64, prediction, "crop", advice)
     except Exception as e:
+        print("Failed to save data...Exiting")
         return jsonify({"error": "Failed to save data", "details": str(e)}), 500
     print("Data saved to MongoDB...Exiting")
-    return jsonify({"prediction": prediction, "advice": advice})
+    return jsonify({"prediction": prediction, "description": description, "cause": cause, "cure": cure})
 
-
+# LIVESTOCK_PREDICTION_ROUTE
 @app.route("/api/livestock/predict", methods=["POST"])
 @jwt_required
 def predict_skin_disease():
@@ -184,7 +190,7 @@ def predict_skin_disease():
     print("Encoding image to base64...")
     image_b64 = encode_image_to_base64(file_path)
 
-    # Save to MongoDB with error handling
+    # Save to MongoDB with error handlingv 
     print("Trying to save data to MongoDB...")
     try:
         save_request_to_db(ldata, user_id, image_b64, prediction, "livestock", advice)
@@ -192,7 +198,7 @@ def predict_skin_disease():
         return jsonify({"error": "Failed to save data", "details": str(e)}), 500
 
     print("Data saved to MongoDB...Exiting")
-    return jsonify({"prediction": prediction, "advice": advice})
+    return jsonify({"prediction": prediction, "description": description, "cause": cause, "cure": cure})
 
 #---------------------------------------------------FETCH_HISTORY_ROUTES----------------------------------------------------------
 @app.route("/api/livestock/history", methods=["GET"])
@@ -214,4 +220,4 @@ def get_crop_history():
     return jsonify({"history": history})
 #---------------------------------------------------START SERVER----------------------------------------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host="0.0.0.0", port=8000)

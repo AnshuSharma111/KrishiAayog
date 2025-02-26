@@ -17,21 +17,27 @@ JWT_SECRET = os.getenv("JWT_SECRET")  # Fixed variable name for consistency
 # JWT Token Verification
 def verify_token(token):
     try:
+        print("Trying to verify token")
         payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
 
         # Fix: Ensure Redis blacklisted check works correctly
+        print("Checking if token is blacklisted")
         if redis_client.get(token) is not None:
             return {"error": "Token is blacklisted", "status_code": 401}
 
+        print("Returning payload...")
         return payload
 
     except jwt.ExpiredSignatureError:
+        print("Token has expired")
         return {"error": "Token has expired", "status_code": 401}
 
     except jwt.InvalidTokenError:
+        print("Invalid token")
         return {"error": "Invalid token", "status_code": 401}
 
     except Exception as e:
+        print(f"Token verification failed: {str(e)}")
         return {"error": f"Token verification failed: {str(e)}", "status_code": 500}
 
 # Middleware to secure endpoints
