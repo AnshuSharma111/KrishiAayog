@@ -1,6 +1,8 @@
 package com.bytebandits.krishiaayog.retrofitInterface
 
-import com.bytebandits.krishiaayog.DataClass.PredictedData
+import android.content.Context
+import com.bytebandits.krishiaayog.DataClass.CropHealthPredictedData
+import com.bytebandits.krishiaayog.DataClass.LivestockHealthPredictedData
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
@@ -17,10 +19,16 @@ import java.util.concurrent.TimeUnit
 interface RetrofitInterface {
 
     @Multipart
-    @POST("/predict")
-    suspend fun uploadImage(
-        @Part image: MultipartBody.Part
-    ):Response<PredictedData>
+    @POST("crop/predict")
+    suspend fun uploadCropImage(
+        @Part file: MultipartBody.Part
+    ):Response<CropHealthPredictedData>
+
+    @Multipart
+    @POST("crop/predict")
+    suspend fun uploadLivestockImage(
+        @Part file: MultipartBody.Part
+    ):Response<LivestockHealthPredictedData>
 
 //    @GET("/api/prediction")
 //    suspend fun getHistory():Response<HistoryData>
@@ -32,16 +40,31 @@ interface RetrofitInterface {
     suspend fun fetchImageById(@Path("id") id:String):Response<ResponseBody>
 
 
-    companion object{
-        private val client = OkHttpClient.Builder()
-            .connectTimeout(4, TimeUnit.MINUTES) // 4-minute connection timeout
-            .writeTimeout(4, TimeUnit.MINUTES)   // 4-minute write timeout
-            .readTimeout(4, TimeUnit.MINUTES)    // 4-minute read timeout
-            .build()
-        val instance by lazy {
-            Retrofit.Builder()
-                .baseUrl("http://172.17.7.142:5000")
-                .client(client)
+    companion object {
+        private fun provideOkHttpClient(context: Context): OkHttpClient {
+            return OkHttpClient.Builder()
+                .connectTimeout(4, TimeUnit.MINUTES)
+                .writeTimeout(4, TimeUnit.MINUTES)
+                .readTimeout(4, TimeUnit.MINUTES)
+                .addInterceptor { chain ->
+                    val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+                    val token = sharedPreferences.getString("jwt_token", null)
+
+                    val request = chain.request().newBuilder().apply {
+                        token?.let {
+                            header("Authorization", "Bearer $it")  // Attach token to every request
+                        }
+                    }.build()
+
+                    chain.proceed(request)
+                }
+                .build()
+        }
+
+        fun create(context: Context): RetrofitInterface {
+            return Retrofit.Builder()
+                .baseUrl("http://192.168.137.221:8000/api/")
+                .client(provideOkHttpClient(context)) // Pass context to fetch JWT token
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
                 .create(RetrofitInterface::class.java)

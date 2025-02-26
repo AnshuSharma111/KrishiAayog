@@ -66,7 +66,7 @@ import kotlin.coroutines.suspendCoroutine
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun Camera(navController: NavHostController, cameraViewModel: CameraViewModel) {
+fun Camera(navController: NavHostController, cameraViewModel: CameraViewModel, resultRoute: String) {
     BackHandler {
         navController.navigate("crophealth"){
             popUpTo(0){
@@ -78,7 +78,7 @@ fun Camera(navController: NavHostController, cameraViewModel: CameraViewModel) {
         rememberPermissionState(android.Manifest.permission.CAMERA)
 
     if (cameraPermission.status.isGranted) {
-        CameraPreviewScreen(navController, cameraViewModel)
+        CameraPreviewScreen(navController, cameraViewModel, resultRoute)
     } else {
         Column {
             if (cameraPermission.status.shouldShowRationale) {
@@ -98,7 +98,7 @@ fun Camera(navController: NavHostController, cameraViewModel: CameraViewModel) {
 }
 
 @Composable
-fun CameraPreviewScreen(navController: NavController, cameraViewModel: CameraViewModel) {
+fun CameraPreviewScreen(navController: NavController, cameraViewModel: CameraViewModel ,resultRoute: String) {
     val lensFacing = CameraSelector.LENS_FACING_BACK
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -189,7 +189,7 @@ fun CameraPreviewScreen(navController: NavController, cameraViewModel: CameraVie
                     .padding(bottom = 150.dp).clip(CircleShape)
                     .clickable {
 
-                        captureImage(navController, imageCapture, context, cameraViewModel)
+                        captureImage(navController, imageCapture, context, cameraViewModel, resultRoute)
 
                         Toast
                             .makeText(context, "Successfully Uploaded", Toast.LENGTH_SHORT)
@@ -215,7 +215,8 @@ private fun captureImage(
     navController: NavController,
     imageCapture: ImageCapture,
     context: Context,
-    cameraViewModel: CameraViewModel
+    cameraViewModel: CameraViewModel,
+    resultRoute: String
 ) {
 
 
@@ -236,8 +237,8 @@ private fun captureImage(
 
                 try {
                     CoroutineScope(Dispatchers.Main).launch {
-                        cameraViewModel.getData(byteArray)
-                        navController.navigate("resultPage")
+                        cameraViewModel.getData(resultRoute, byteArray)
+                        navController.navigate(resultRoute)
                     }
 
                 } catch (e: Exception) {

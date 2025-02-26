@@ -37,11 +37,9 @@ import com.bytebandits.krishiaayog.ui.theme.Lufga
 import com.bytebandits.krishiaayog.ui.theme.darkgreencolour
 import com.bytebandits.krishiaayog.ui.theme.greenColor
 import com.bytebandits.krishiaayog.ui.theme.mainBgColour
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun CropHealthScreen(navController: NavController) {
+fun LivestockDiseaseScreen (navController: NavController) {
 
 //    LaunchedEffect(Unit) {
 //        viewModel.getPredictedHistory()
@@ -67,7 +65,7 @@ fun CropHealthScreen(navController: NavController) {
             }
             .fillMaxWidth()) {
             Text(
-                text = "Crop Health ",
+                text = "Livestock Disease ",
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(top = 50.dp),
@@ -125,7 +123,7 @@ fun CropHealthScreen(navController: NavController) {
                     }
                 }
                 Button(
-                    onClick = { navController.navigate("camera/crop_health_result") },
+                    onClick = { navController.navigate("camera/livestock_health_result") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(20.dp),
