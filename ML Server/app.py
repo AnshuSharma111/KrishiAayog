@@ -8,6 +8,8 @@ from pymongo import MongoClient
 import io
 import datetime
 import base64
+# redis
+import redis
 # ML related imports
 import torch
 from PIL import Image
@@ -30,6 +32,14 @@ client = MongoClient(os.getenv("MONGO_URI"))
 db = client[os.getenv("DB")]
 cdata = db[os.getenv("CROP_COL")]
 ldata = db[os.getenv("LSTOCK_COL")]
+
+# Set up Redis connection
+redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+if redis_client.ping():
+    print("Connected to Redis")
+else:
+    print("Failed to connect to Redis")
 
 # ---------------------------------------------------GEMINI---------------------------------------------------
 # Set up Gemini model
@@ -154,6 +164,7 @@ def predict_crop_disease():
         print("Failed to save data...Exiting")
         return jsonify({"error": "Failed to save data", "details": str(e)}), 500
     print("Data saved to MongoDB...Exiting")
+    print("Prediction: ", prediction)
     return jsonify({"prediction": prediction, "description": description, "cause": cause, "cure": cure})
 
 # LIVESTOCK_PREDICTION_ROUTE
@@ -198,6 +209,7 @@ def predict_skin_disease():
         return jsonify({"error": "Failed to save data", "details": str(e)}), 500
 
     print("Data saved to MongoDB...Exiting")
+    print("Prediction: ", prediction)
     return jsonify({"prediction": prediction, "description": description, "cause": cause, "cure": cure})
 
 #---------------------------------------------------FETCH_HISTORY_ROUTES----------------------------------------------------------
@@ -218,6 +230,22 @@ def get_crop_history():
     user_id = request.user["id"]
     history = list(cdata.find({"user_id": user_id}, {"_id": 0}))
     return jsonify({"history": history})
-#---------------------------------------------------START SERVER----------------------------------------------------------
+
+@app.route("/api/daily", methods=["GET"])
+@jwt_required
+def get_daily_fact():
+    print("Received request to fetch daily fact...")
+    cached_fact = redis_client.get("daily_fact")
+    if cached_fact:
+        print("Cache hit! Returning fact from Redis...")
+        return jsonify({"daily_fact": cached_fact,
+                        "notice": "The government has proposed a new bill to help farmers. Please check the news for more information."})
+
+    print("Cache miss! Querying Gemini for daily fact...")
+    message = llm.generate_content("Tell me a random interesting fact about farming. ").text
+    redis_client.setex("daily_fact", 86400, message)
+    return jsonify({"daily_fact": message, "notice":"The government has proposed a new bill to help farmers. Please check the news for more information."})
+
+#---------------------------------------------------START SERVER------------------------------------------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)

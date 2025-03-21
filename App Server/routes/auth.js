@@ -39,16 +39,16 @@ router.post("/signup", async (req, res) => {
     console.log("Registered user on database...");
 
     console.log("Storing password and phone number in Redis...");
-    // Store password and phone number in Redis (Optional, expires in 1 hour)
-    await redis.setex(`user:${user._id}:password`, 3600, hashedPassword);
-    await redis.setex(`user:${user._id}:phoneno`, 3600, phoneno);
+    // Store password and phone number in Redis (expires in 24 hours)
+    await redis.setex(`user:${user._id}:password`, 86400, hashedPassword);
+    await redis.setex(`user:${user._id}:phoneno`, 86400, phoneno);
 
     console.log("Generating JWT token...");
     // Generate JWT token immediately after signup
     const token = jwt.sign(
       { id: user._id, username: user.username, phoneno: user.phoneno },
       JWT_SECRET,
-      { expiresIn: "2h" }
+      { expiresIn: "24h" }
     );
 
     console.log("Returning response...");
@@ -83,7 +83,7 @@ router.post("/login", async (req, res) => {
     let hashedPassword = await redis.get(`user:${user._id}:password`);
     if (!hashedPassword) {
       hashedPassword = user.password;
-      await redis.setex(`user:${user._id}:password`, 3600, hashedPassword);
+      await redis.setex(`user:${user._id}:password`, 86400, hashedPassword);
     }
 
     console.log("Comparing passwords...");
@@ -98,7 +98,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: user._id, username: user.username, phoneno: user.phoneno },
       JWT_SECRET,
-      { expiresIn: "2h" }
+      { expiresIn: "24h" }
     );
 
     console.log("Returning response...");
@@ -118,9 +118,9 @@ router.post("/logout", async (req, res) => {
       return res.status(400).json({ message: "No token provided" });
     }
 
-    // Blacklist token in Redis (Expires in 2h to match JWT)
+    // Blacklist token in Redis (Expires in 24h to match JWT)
     console.log("Blacklisting token in Redis...");
-    await redis.setex(`blacklist:${token}`, 7200, "1");
+    await redis.setex(`blacklist:${token}`, 86400, "1");
 
     console.log("Returning response...");
     res.json({ message: "User logged out successfully" });

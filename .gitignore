@@ -294,4 +294,6 @@ dist
 .pnp.*
 
 uploads
-./__pycache__
+ML Server\__pycache__
+
+KrshiAayog.mp4
