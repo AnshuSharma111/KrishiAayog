@@ -1,1 +1,59 @@
 /build
+# Gradle
+.gradle/
+build/
+.gradle/*
+
+# Local configuration files
+local.properties
+
+# Android Studio
+.idea/
+*.iml
+*.iws
+
+# Gradle Wrapper
+gradle/wrapper/gradle-wrapper.jar
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Android-specific
+*.apk
+*.ap_
+*.aab
+*.keystore
+
+# Android Studio Captures
+captures/
+
+# Generated files
+generated/
+
+# Android Test Results
+*/test-*/ # Test results folders
+*/test-*/.*/ # Test results folders (nested)
+
+# JetBrains IDE files (e.g., IntelliJ IDEA, Android Studio)
+.idea/
+*.iws
+*.iml
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries/
+.idea/gradle.xml
+.idea/runConfigurations/
+
+# Kotlin-specific
+.idea/kotlin/
+
+#APIs
+apikeys.properties
+

@@ -1,5 +1,7 @@
 package com.bytebandits.krishiaayog
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,27 +9,36 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -37,17 +48,20 @@ import com.bytebandits.krishiaayog.ui.theme.Lufga
 import com.bytebandits.krishiaayog.ui.theme.darkgreencolour
 import com.bytebandits.krishiaayog.ui.theme.greenColor
 import com.bytebandits.krishiaayog.ui.theme.mainBgColour
+import com.bytebandits.krishiaayog.viewmodel.CropHealthScreenViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun CropHealthScreen(navController: NavController) {
+fun CropHealthScreen(navController: NavController, viewModel: CropHealthScreenViewModel) {
 
-//    LaunchedEffect(Unit) {
-//        viewModel.getPredictedHistory()
-//    }
+    LaunchedEffect(Unit) {
+        viewModel.getPrevCropHistory()
+    }
 
-//    val user_history = viewModel.PredictedHistory.value
+    val user_history by viewModel.diseaseHistory.collectAsStateWithLifecycle()
 
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.plant))
     ConstraintLayout(
@@ -124,8 +138,9 @@ fun CropHealthScreen(navController: NavController) {
                         )
                     }
                 }
+                val resultRoute = "crop_health_result"
                 Button(
-                    onClick = { navController.navigate("camera/crop_health_result") },
+                    onClick = { navController.navigate("camera/$resultRoute") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(20.dp),
@@ -134,7 +149,8 @@ fun CropHealthScreen(navController: NavController) {
                     )
                 ) {
                     Text(
-                        "Diagnose", fontFamily = Lufga,
+                        "Diagnose",
+                        fontFamily = Lufga,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Normal
                     )
@@ -153,18 +169,23 @@ fun CropHealthScreen(navController: NavController) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(360.dp)
+                .height(300.dp)
                 .padding(top = 40.dp)
                 .constrainAs(RecentDiagnosesCard) {
                     top.linkTo(ScanCard.bottom)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
-                }, colors = CardDefaults.cardColors(Color.White)
+                }, colors = CardDefaults.cardColors(greenColor)
         ) {
-            Column(modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth()) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .fillMaxSize()
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
                         "Recent Diagnoses",
                         fontFamily = Lufga,
@@ -182,29 +203,73 @@ fun CropHealthScreen(navController: NavController) {
                         textAlign = TextAlign.Right
                     )
                 }
+                Spacer(Modifier.height(6.dp))
+                HorizontalDivider(color = Color(0xFFA4A4A4))
+
+                val history_list = user_history
+
+                if (history_list?.history?.isNotEmpty() == true) {
+                    LazyColumn(modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .fillMaxSize()) {
+
+                        items(history_list.history.size) { item ->
+                            val history = history_list.history[item]
+                            val bitmap = decodeBase64ToBitmap(history.image)
+
+                            HistoryBox(history.prediction, history.timestamp, bitmap)
+                        }
+
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                    ) {
+                        Text("No History Found", textAlign = TextAlign.Center, fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal)
+                    }
+                }
             }
-
-//            LazyColumn {
-//                if (user_history != null) {
-//                    items(user_history.toList()){item ->
-//                        LaunchedEffect(item._id) {
-//                            if(item.image == null){
-//                                viewModel.getImageForId(item._id)
-//                            }
-//                        }
-//
-//                        Row {
-//                            val imageStream  = viewModel.getImageForId(item._id)
-//                            if(imageStream!=null){
-//                                Image(rememberAsyncImagePainter(imageStream), null)
-//                            }
-//                            Text(item.predicted_class, fontFamily = Poppins, fontSize = 12.sp, fontWeight = FontWeight.Normal)
-//                        }
-//                    }
-//                }
-//            }
-
         }
 
     }
+
 }
+
+@Composable
+fun HistoryBox(prediction: String, timestamp: String, bitmap: Bitmap) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            bitmap.asImageBitmap(), "", modifier = Modifier
+                .width(40.dp)
+                .height(50.dp)
+                .clip(
+                    RoundedCornerShape(5.dp)
+                )
+        )
+        Column(modifier = Modifier.padding(start = 5.dp)) {
+            Text(
+                prediction,
+                fontFamily = Lufga,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                lineHeight = 2.sp
+            )
+            Text(timestamp, fontFamily = Lufga, fontSize = 12.sp, fontWeight = FontWeight.Light)
+        }
+    }
+}
+
+
+@OptIn(ExperimentalEncodingApi::class)
+fun decodeBase64ToBitmap(base64String: String): Bitmap {
+    val decodedBytes: ByteArray = Base64.decode(base64String)
+    return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        ?: throw IllegalArgumentException("Failed to decode Base64 to Bitmap")
+}
+

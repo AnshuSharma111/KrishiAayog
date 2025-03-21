@@ -10,7 +10,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.bytebandits.krishiaayog.BuildConfig
+import com.bytebandits.krishiaayog.DataClass.HomePageAnnouncements
 import com.bytebandits.krishiaayog.DataClass.currentWeather.CurrentWeatherDataClass
+import com.bytebandits.krishiaayog.retrofitInterface.RetrofitInterface
 import com.bytebandits.krishiaayog.retrofitInterface.provideOpenWeatherService
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -20,6 +22,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.google.android.gms.location.Priority
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 
 private const val apikey = BuildConfig.WEATHER_API_KEY
@@ -27,7 +32,14 @@ private const val apikey = BuildConfig.WEATHER_API_KEY
 
 @SuppressLint("MissingPermission")
 class HomeScreenViewModel (application: Application) : AndroidViewModel(application) {
+
     val weatherData = mutableStateOf<CurrentWeatherDataClass?>(null)
+
+    @SuppressLint("StaticFieldLeak")
+    private val context = getApplication<Application>().applicationContext
+
+    val _announcements = MutableStateFlow<HomePageAnnouncements?>(null)
+    val announcements: StateFlow<HomePageAnnouncements?> = _announcements.asStateFlow()
 
 
     fun onPermissionGranted() {
@@ -71,6 +83,22 @@ class HomeScreenViewModel (application: Application) : AndroidViewModel(applicat
                     weatherData.value = null
                 }
 
+            }
+        }
+    }
+
+    fun getAnnouncements() {
+        viewModelScope.launch {
+            try {
+                val retrofit = RetrofitInterface.create(context)
+                val response = retrofit.getAnnouncements()
+                if (response.isSuccessful) {
+                    _announcements.value = response.body()
+                } else {
+                    println("${response.errorBody()} + ${response.code()}")
+                }
+            } catch (e : Exception) {
+                println(e.message)
             }
         }
     }

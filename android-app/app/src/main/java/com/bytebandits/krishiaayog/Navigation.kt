@@ -1,7 +1,6 @@
 package com.bytebandits.krishiaayog
 
 
-import android.app.Application
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -9,12 +8,21 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.bytebandits.krishiaayog.viewmodel.CameraViewModel
+import com.bytebandits.krishiaayog.viewmodel.CropHealthScreenViewModel
 import com.bytebandits.krishiaayog.viewmodel.HomeScreenViewModel
+import com.bytebandits.krishiaayog.viewmodel.LivestockHealthScreenViewModel
 import com.bytebandits.krishiaayog.viewmodel.SignUpViewModel
 
 
 @Composable
-fun Navigation(navController: NavHostController, cameraViewModel: CameraViewModel, homeScreenViewModel: HomeScreenViewModel, signUpViewModel: SignUpViewModel) {
+fun Navigation(
+    navController: NavHostController,
+    cameraViewModel: CameraViewModel,
+    homeScreenViewModel: HomeScreenViewModel,
+    signUpViewModel: SignUpViewModel,
+    cropHealthScreenViewModel: CropHealthScreenViewModel,
+    livestockHealthScreenViewModel: LivestockHealthScreenViewModel
+) {
 
     val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
@@ -48,7 +56,7 @@ fun Navigation(navController: NavHostController, cameraViewModel: CameraViewMode
         }
 
         composable(route = "crophealth") {
-            CropHealthScreen(navController)
+            CropHealthScreen(navController, cropHealthScreenViewModel)
         }
 
 //        composable(route = "image_capture") {
@@ -65,7 +73,7 @@ fun Navigation(navController: NavHostController, cameraViewModel: CameraViewMode
         }
 
         composable(route = "livestockhealth") {
-            LivestockDiseaseScreen(navController)
+            LivestockDiseaseScreen(navController, livestockHealthScreenViewModel)
         }
 
         composable(route = "livestock_health_result") {

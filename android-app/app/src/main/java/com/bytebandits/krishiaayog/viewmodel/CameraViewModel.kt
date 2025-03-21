@@ -27,7 +27,8 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
     @SuppressLint("StaticFieldLeak")
     private val context = getApplication<Application>().applicationContext
 
-    val DiseaseData = mutableStateOf<CropHealthPredictedData?>(null)
+    val CropDiseaseData = mutableStateOf<CropHealthPredictedData?>(null)
+    val LivestockDiseaseData = mutableStateOf<LivestockHealthPredictedData?>(null)
 
     val CapturedImage = mutableStateOf<Bitmap?>(null)
 
@@ -58,22 +59,26 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
 //                }
 
 
-//                withContext(Dispatchers.Main) {
-//                    println("Request Chole geche")
-//
-//                    if (dataResponse.isSuccessful) {
-//                        DiseaseData.value = dataResponse.body()
-//                        println(DiseaseData.value)
-//                    }else{
-//                        println("response nhi aya !")
-//                    }
-//                }
+                withContext(Dispatchers.Main) {
+                    println("Request Chole geche")
+
+                    if (dataResponse.isSuccessful) {
+                        if (resultRoute == "crop_health_result") {
+                            CropDiseaseData.value = dataResponse.body() as CropHealthPredictedData?
+                        } else {
+                            LivestockDiseaseData.value = dataResponse.body() as LivestockHealthPredictedData?
+                        }
+                        println(dataResponse.body())
+                    }else{
+                        println("response nhi aya !")
+                    }
+                }
             } catch (e: Exception) {
                 println(e)
-                DiseaseData.value = null
+                CropDiseaseData.value = null
             } catch (e: IOException) {
                 println(e)
-                DiseaseData.value = null
+                CropDiseaseData.value = null
             }
         }
     }

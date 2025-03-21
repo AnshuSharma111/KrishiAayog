@@ -54,7 +54,7 @@ fun CropHealthResultPage (navController: NavController, viewModel: CameraViewMod
         }
     }
 
-    val diseaseData = viewModel.DiseaseData.value
+    val diseaseData = viewModel.CropDiseaseData.value
     val capturedImage = viewModel.CapturedImage.value
 
 

@@ -1,7 +1,10 @@
 package com.bytebandits.krishiaayog.retrofitInterface
 
 import android.content.Context
+import com.bytebandits.krishiaayog.DataClass.CropDiseaseHistory
 import com.bytebandits.krishiaayog.DataClass.CropHealthPredictedData
+import com.bytebandits.krishiaayog.DataClass.DiseaseHistoryList
+import com.bytebandits.krishiaayog.DataClass.HomePageAnnouncements
 import com.bytebandits.krishiaayog.DataClass.LivestockHealthPredictedData
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -25,19 +28,20 @@ interface RetrofitInterface {
     ):Response<CropHealthPredictedData>
 
     @Multipart
-    @POST("crop/predict")
+    @POST("livestock/predict")
     suspend fun uploadLivestockImage(
         @Part file: MultipartBody.Part
     ):Response<LivestockHealthPredictedData>
 
-//    @GET("/api/prediction")
-//    suspend fun getHistory():Response<HistoryData>
-//
-//    @GET("/api/prediction/{id}")
-//    suspend fun getHistoryById(@Path("id") id:String):Response<HistoryDataItem>
+    @GET("livestock/history")
+    suspend fun getLivestockHistory():Response<DiseaseHistoryList>
 
-    @GET("/api/image/{id}")
-    suspend fun fetchImageById(@Path("id") id:String):Response<ResponseBody>
+
+    @GET("crop/history")
+    suspend fun getCropHistory():Response<DiseaseHistoryList>
+
+    @GET("daily")
+    suspend fun getAnnouncements(): Response<HomePageAnnouncements>
 
 
     companion object {
@@ -49,6 +53,7 @@ interface RetrofitInterface {
                 .addInterceptor { chain ->
                     val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
                     val token = sharedPreferences.getString("jwt_token", null)
+                    println("token" + token)
 
                     val request = chain.request().newBuilder().apply {
                         token?.let {
@@ -63,7 +68,7 @@ interface RetrofitInterface {
 
         fun create(context: Context): RetrofitInterface {
             return Retrofit.Builder()
-                .baseUrl("http://192.168.137.221:8000/api/")
+                .baseUrl("http://your-backend/api/")
                 .client(provideOkHttpClient(context)) // Pass context to fetch JWT token
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()

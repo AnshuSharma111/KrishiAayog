@@ -40,7 +40,7 @@ fun BottomBarDock(navController: NavController, modifier: Modifier = Modifier) {
         modifier = Modifier
             .fillMaxWidth()
             .height(70.dp)
-            .padding(horizontal = 40.dp)
+            .padding(horizontal = 60.dp)
             .shadow(elevation = 8.dp, shape = RoundedCornerShape(50.dp))
             .clip(RoundedCornerShape(50.dp))
             .background(darkgreencolour),

@@ -1,5 +1,7 @@
 package com.bytebandits.krishiaayog
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,27 +9,37 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -37,17 +49,21 @@ import com.bytebandits.krishiaayog.ui.theme.Lufga
 import com.bytebandits.krishiaayog.ui.theme.darkgreencolour
 import com.bytebandits.krishiaayog.ui.theme.greenColor
 import com.bytebandits.krishiaayog.ui.theme.mainBgColour
+import com.bytebandits.krishiaayog.viewmodel.LivestockHealthScreenViewModel
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Composable
-fun LivestockDiseaseScreen (navController: NavController) {
+fun LivestockDiseaseScreen (navController: NavController, viewModel: LivestockHealthScreenViewModel) {
 
-//    LaunchedEffect(Unit) {
-//        viewModel.getPredictedHistory()
-//    }
+    LaunchedEffect(Unit) {
+        viewModel.getPrevLiveStockHistory()
+    }
 
-//    val user_history = viewModel.PredictedHistory.value
+    val user_history by viewModel.diseaseHistory.collectAsStateWithLifecycle()
 
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.plant))
+
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.animal))
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
@@ -87,9 +103,9 @@ fun LivestockDiseaseScreen (navController: NavController) {
                     bottom.linkTo(RecentDiagnosesCard.top)
                 }, colors = CardDefaults.cardColors(greenColor)
         ) {
-            Column {
+            Column() {
                 Row(
-                    modifier = Modifier.padding(top = 10.dp),
+                    modifier = Modifier.padding(top = 10.dp).padding(horizontal = 10.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -104,14 +120,14 @@ fun LivestockDiseaseScreen (navController: NavController) {
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "Check Your Plant",
+                            text = "Diagnose Your Livestock",
                             modifier = Modifier.align(Alignment.Start),
                             fontFamily = Lufga,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "Take Photos, start diagnose disease, & get plant care tips !",
+                            text = "Take Photos, check if livestock is infected, & get tips regarding cure !",
                             fontFamily = Lufga,
                             lineHeight = 16.sp,
                             modifier = Modifier
@@ -151,17 +167,17 @@ fun LivestockDiseaseScreen (navController: NavController) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(360.dp)
+                .height(300.dp)
                 .padding(top = 40.dp)
                 .constrainAs(RecentDiagnosesCard) {
                     top.linkTo(ScanCard.bottom)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
-                }, colors = CardDefaults.cardColors(Color.White)
+                }, colors = CardDefaults.cardColors(greenColor)
         ) {
             Column(modifier = Modifier
                 .padding(20.dp)
-                .fillMaxWidth()) {
+                .fillMaxSize()) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(
                         "Recent Diagnoses",
@@ -180,29 +196,38 @@ fun LivestockDiseaseScreen (navController: NavController) {
                         textAlign = TextAlign.Right
                     )
                 }
+
+                Spacer(Modifier.height(6.dp))
+                HorizontalDivider(color = Color(0xFFA4A4A4))
+
+                val history_list = user_history
+
+                if (history_list?.history?.isNotEmpty() == true) {
+                    LazyColumn(modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .fillMaxSize()) {
+
+                        items(history_list.history.size) { item ->
+                            val history = history_list.history[item]
+                            val bitmap = decodeBase64ToBitmap(history.image)
+
+                            HistoryBox(history.prediction, history.timestamp, bitmap)
+                        }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                    ) {
+                        Text("No History Found", textAlign = TextAlign.Center, fontFamily = Lufga,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal)
+                    }
+                }
             }
 
-//            LazyColumn {
-//                if (user_history != null) {
-//                    items(user_history.toList()){item ->
-//                        LaunchedEffect(item._id) {
-//                            if(item.image == null){
-//                                viewModel.getImageForId(item._id)
-//                            }
-//                        }
-//
-//                        Row {
-//                            val imageStream  = viewModel.getImageForId(item._id)
-//                            if(imageStream!=null){
-//                                Image(rememberAsyncImagePainter(imageStream), null)
-//                            }
-//                            Text(item.predicted_class, fontFamily = Poppins, fontSize = 12.sp, fontWeight = FontWeight.Normal)
-//                        }
-//                    }
-//                }
-//            }
 
         }
 
     }
 }
+

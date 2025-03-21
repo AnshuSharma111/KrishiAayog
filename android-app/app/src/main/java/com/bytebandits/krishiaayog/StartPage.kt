@@ -2,10 +2,12 @@ package com.bytebandits.krishiaayog
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -16,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -29,7 +33,12 @@ fun StartPage(navController: NavController) {
 
     Box(modifier = Modifier.fillMaxSize()){
         Image(modifier = Modifier.fillMaxSize(), painter = painterResource(id = R.drawable.loginpagepicture), contentDescription = "Login page background", contentScale = ContentScale.Crop)
+    Column(modifier = Modifier.padding(20.dp).fillMaxWidth().offset(y= 120.dp)) {
+        Text("KrishiAayog",fontFamily = Lufga, fontWeight = FontWeight.SemiBold, fontSize = 42.sp, color = Color.LightGray, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center )
     }
+    }
+
+
 
     ConstraintLayout(modifier = Modifier.fillMaxSize().padding(start = 20.dp, end = 20.dp, top =20.dp, bottom = 10.dp)) {
 

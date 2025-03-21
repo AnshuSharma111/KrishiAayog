@@ -30,16 +30,12 @@ import com.bytebandits.krishiaayog.ui.theme.Lufga
 
 @Composable
 fun PermissionScreen(showRationale: Boolean, onRequestPermissions: () -> Unit) {
-    Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
+    Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(30.dp)) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.corn),
-                    contentDescription = "Location"
-                )
                 if (!showRationale) {
                     Text(
                         text = "This app requires location permission to work properly",
@@ -47,21 +43,21 @@ fun PermissionScreen(showRationale: Boolean, onRequestPermissions: () -> Unit) {
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 20.dp),
-                        color = Color.White
+                        color = Color.Black
                     )
 
                     Button(
                         onClick = onRequestPermissions,
                         modifier = Modifier.padding(20.dp),
-                        colors = ButtonDefaults.buttonColors(Color.White)
+                        colors = ButtonDefaults.buttonColors(Color.Black)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Get Started", fontFamily = Lufga, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text("Get Started", fontFamily = Lufga, fontWeight = FontWeight.Bold, color = Color.White)
                             Icon(
                                 Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                                 contentDescription = "Arrow Forward",
                                 modifier = Modifier.padding(start = 10.dp),
-                                tint = Color.Black
+                                tint = Color.White
                             )
 
                         }
@@ -73,7 +69,8 @@ fun PermissionScreen(showRationale: Boolean, onRequestPermissions: () -> Unit) {
                         fontFamily = Lufga,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 20.dp)
+                        modifier = Modifier.padding(top = 20.dp),
+                        color = Color.Black
                     )
                     Button(
                         onClick = {
@@ -84,7 +81,7 @@ fun PermissionScreen(showRationale: Boolean, onRequestPermissions: () -> Unit) {
                             context.startActivity(intent)
                         },
                         modifier = Modifier.padding(20.dp),
-                        colors = ButtonDefaults.buttonColors(Color.White)
+                        colors = ButtonDefaults.buttonColors(Color.Black)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
@@ -95,7 +92,8 @@ fun PermissionScreen(showRationale: Boolean, onRequestPermissions: () -> Unit) {
                             Icon(
                                 Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                                 contentDescription = "Arrow Forward",
-                                modifier = Modifier.padding(start = 10.dp)
+                                modifier = Modifier.padding(start = 10.dp),
+                                tint = Color.White
                             )
 
                         }

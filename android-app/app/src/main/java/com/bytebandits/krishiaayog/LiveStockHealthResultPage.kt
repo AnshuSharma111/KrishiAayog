@@ -55,7 +55,7 @@ fun LiveStockHealthResultPage (navController: NavController, viewModel: CameraVi
         }
     }
 
-    val diseaseData = viewModel.DiseaseData.value
+    val diseaseData = viewModel.LivestockDiseaseData.value
     val capturedImage = viewModel.CapturedImage.value
 
 
@@ -166,7 +166,7 @@ fun LiveStockHealthResultPage (navController: NavController, viewModel: CameraVi
 
 @Composable
 fun Cards(diseaseData: LivestockHealthPredictedData, modifier: Modifier) {
-    Column(modifier = modifier.padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 30.dp)) {
+    Column(modifier = modifier.padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 100.dp)) {
         Card(
             modifier = Modifier.padding(top = 5.dp, bottom = 5.dp),
             colors = CardDefaults.cardColors(Color.White)

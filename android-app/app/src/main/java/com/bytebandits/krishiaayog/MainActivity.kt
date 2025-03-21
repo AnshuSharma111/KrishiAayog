@@ -19,8 +19,12 @@ import androidx.navigation.compose.rememberNavController
 import com.bytebandits.krishiaayog.ui.theme.KrishiAayogTheme
 import com.bytebandits.krishiaayog.viewmodel.CameraViewModel
 import com.bytebandits.krishiaayog.viewmodel.CameraViewModelFactory
+import com.bytebandits.krishiaayog.viewmodel.CropHealthScreenViewModel
+import com.bytebandits.krishiaayog.viewmodel.CropHealthScreenViewModelFactory
 import com.bytebandits.krishiaayog.viewmodel.HomeScreenViewModel
 import com.bytebandits.krishiaayog.viewmodel.HomeScreenViewModelFactory
+import com.bytebandits.krishiaayog.viewmodel.LiveStockHealthScreenViewModelFactory
+import com.bytebandits.krishiaayog.viewmodel.LivestockHealthScreenViewModel
 import com.bytebandits.krishiaayog.viewmodel.SignUpViewModel
 import com.bytebandits.krishiaayog.viewmodel.SignupPageViewModelFactory
 
@@ -30,6 +34,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var cameraViewModel: CameraViewModel
     private lateinit var homeScreenViewModel: HomeScreenViewModel
     private lateinit var signUpViewModel: SignUpViewModel
+    private lateinit var cropHealthScreenViewModel: CropHealthScreenViewModel
+    private lateinit var livestockHealthScreenViewModel: LivestockHealthScreenViewModel
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,9 +57,13 @@ class MainActivity : ComponentActivity() {
 
                 signUpViewModel = viewModel (factory = SignupPageViewModelFactory(application))
 
+                cropHealthScreenViewModel = viewModel(factory = CropHealthScreenViewModelFactory(application))
+
+                livestockHealthScreenViewModel = viewModel(factory = LiveStockHealthScreenViewModelFactory(application))
+
                 val currentRoute =
                     navController.currentBackStackEntryAsState().value?.destination?.route
-                val hideBottomBarRoutes = listOf("image_capture", "start", "login", "signup", "loading_screen") // Add more routes as needed
+                val hideBottomBarRoutes = listOf("camera/{resultRoute}", "start", "login", "signup", "loading_screen") // Add more routes as needed
 
                 Scaffold(bottomBar = {if (currentRoute !in hideBottomBarRoutes){
                     Box(
@@ -62,7 +72,7 @@ class MainActivity : ComponentActivity() {
                             .padding(bottom = 26.dp)
                     ) { BottomBarDock(navController) }
                 }}) {
-                    Navigation(navController = navController, cameraViewModel, homeScreenViewModel, signUpViewModel)
+                    Navigation(navController = navController, cameraViewModel, homeScreenViewModel, signUpViewModel, cropHealthScreenViewModel, livestockHealthScreenViewModel)
                 }
 
 

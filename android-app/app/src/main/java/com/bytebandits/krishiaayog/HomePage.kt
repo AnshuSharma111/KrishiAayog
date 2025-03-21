@@ -14,47 +14,42 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddLocation
+import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.PinDrop
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.rememberAsyncImagePainter
 import com.bytebandits.krishiaayog.DataClass.currentWeather.CurrentWeatherDataClass
 import com.bytebandits.krishiaayog.ui.theme.Lufga
 import com.bytebandits.krishiaayog.ui.theme.darkgreencolour
 import com.bytebandits.krishiaayog.ui.theme.greenColor
-import com.bytebandits.krishiaayog.ui.theme.mainBgColour
 import com.bytebandits.krishiaayog.viewmodel.HomeScreenViewModel
 import kotlin.math.roundToInt
 
@@ -69,6 +64,12 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel) {
     val gpsEnabled = isGPSEnabled(viewModel.getApplication())
     val weatherData = viewModel.weatherData.value
 
+    LaunchedEffect(Unit) {
+        viewModel.getAnnouncements()
+    }
+
+    val announcements by viewModel.announcements.collectAsStateWithLifecycle()
+
     if (weatherData != null ) {
 
         ConstraintLayout(
@@ -77,7 +78,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel) {
                 .padding(20.dp)
         ) {
 
-            val (topBar, weatherCard, historyCard) = createRefs()
+            val (topBar, weatherCard, notice, daily_fact) = createRefs()
 
             if (username != null) {
                 TopBar(modifier = Modifier
@@ -90,11 +91,121 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel) {
                     }, username)
             }
 
-            WeatherCard(modifier = Modifier.constrainAs(weatherCard) {
+            WeatherCard(modifier = Modifier.padding(bottom = 10.dp).constrainAs(weatherCard) {
                 top.linkTo(topBar.bottom)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
+                bottom.linkTo(notice.top)
             }, weatherData = weatherData)
+
+
+            Card(modifier = Modifier.constrainAs(notice){
+                top.linkTo(weatherCard.bottom)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+                bottom.linkTo(daily_fact.top)
+            }.fillMaxWidth().padding(vertical = 10.dp).height(130.dp), colors = CardDefaults.cardColors(
+                greenColor)) {
+
+                Column(modifier = Modifier
+                    .padding(20.dp)
+                    .fillMaxSize()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Notices",
+                            fontFamily = Lufga,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        Icon(Icons.Default.Campaign, "icon")
+                    }
+
+                    Spacer(Modifier.height(6.dp))
+                    HorizontalDivider(color = Color(0xFFA4A4A4))
+                    Spacer(Modifier.height(8.dp))
+
+                    val announcementData = announcements
+                    LazyColumn {
+                        item {
+                            if (announcementData?.notice != null) {
+                                Text(
+                                    announcementData.notice,
+                                    fontFamily = Lufga,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Light,
+                                    lineHeight = 16.sp,
+                                    textAlign = TextAlign.Justify
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("No Notices ")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Card(modifier = Modifier.constrainAs(daily_fact){
+                top.linkTo(notice.bottom)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+            }.fillMaxWidth().height(200.dp).padding(vertical = 10.dp), colors = CardDefaults.cardColors(
+                greenColor)) {
+
+                Column(modifier = Modifier
+                    .padding(20.dp)
+                    .fillMaxSize()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Daily Fact",
+                            fontFamily = Lufga,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        Icon(Icons.Default.Lightbulb, "icon")
+                    }
+
+                    Spacer(Modifier.height(6.dp))
+                    HorizontalDivider(color = Color(0xFFA4A4A4))
+                    Spacer(Modifier.height(8.dp))
+
+                    val announcementData = announcements
+                    LazyColumn {
+                        item {
+                            if (announcementData?.daily_fact != null) {
+                                Text(
+                                    announcementData.daily_fact,
+                                    fontFamily = Lufga,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Light,
+                                    lineHeight = 16.sp,
+                                    textAlign = TextAlign.Justify
+                                )
+
+                            } else {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("No Daily Facts ! ")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     } else {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

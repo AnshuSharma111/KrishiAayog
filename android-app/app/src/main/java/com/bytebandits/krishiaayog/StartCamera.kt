@@ -16,6 +16,7 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -27,6 +28,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -80,13 +83,13 @@ fun Camera(navController: NavHostController, cameraViewModel: CameraViewModel, r
     if (cameraPermission.status.isGranted) {
         CameraPreviewScreen(navController, cameraViewModel, resultRoute)
     } else {
-        Column {
+        Column(modifier = Modifier.fillMaxSize().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             if (cameraPermission.status.shouldShowRationale) {
-                Text("Camera permission is required to take photos")
+                Text("Camera permission is required to take photos", textAlign = TextAlign.Center)
             } else {
-                Text("Camera permission is permanently denied. You can enable it in the settings.")
+                Text("Camera permission is permanently denied. You can enable it in the settings." , textAlign = TextAlign.Center)
             }
-            Button(onClick = {
+            Button(colors = ButtonDefaults.buttonColors(Color.Black), onClick = {
                 cameraPermission.launchPermissionRequest()
             }) {
                 Text("Request permission")

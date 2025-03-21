@@ -21,6 +21,6 @@ interface LoginSignup {
 }
 
 fun provideLoginSignupService(): LoginSignup {
-    return Retrofit.Builder().baseUrl("http://192.168.137.221:5000/api/auth/")
+    return Retrofit.Builder().baseUrl("http://your-backend/api/auth/")
         .addConverterFactory(GsonConverterFactory.create()).build().create()
 }
