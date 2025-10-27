@@ -25,6 +25,11 @@ https://github.com/user-attachments/assets/7b175b28-2e2c-44d0-bc63-b5402e76e47c
 4. **Veterinary Assistance**
    - Connects users to nearby veterinary professionals for urgent support.
 
+## **App Preview:**
+  <img src="https://github.com/user-attachments/assets/bfa47176-a395-449b-9e16-020148e1a61c" width="190" style="margin-right: 40px;" />
+  <img src="https://github.com/user-attachments/assets/ea6fa54a-18e6-4cfe-a69f-908b1faaa7aa" width="190" style="margin-right: 40px;" />
+  <img src="https://github.com/user-attachments/assets/15a6698b-3a2c-4d1f-999c-88fef3ce9b97" width="190" style="margin-right: 40px;" />
+
 ## **Technology Stack:**
 - **Mobile App Development:** Built using **Java**, **Kotlin** and **Jetpack Compose** for a seamless Android experience. Retrofit for handling HTTPS requests. Implemented CameraX library for capturing images.
 - **Backend:** Powered by **MongoDB** for efficient and scalable data management.
